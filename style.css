@@ -116,3 +116,9 @@
 }
 .button,.button-submit{background:#cf2b23;font-weight:700}
 .button:hover{background:#e5372e}
+
+/* dip参考の追加要素（2026-09-15）: ゴーストボタン・巨大英字 */
+.button-ghost{display:inline-flex;align-items:center;gap:10px;background:transparent;border:1px solid rgba(255,255,255,.35);color:var(--white);padding:14px 26px;font-size:.8125rem;font-weight:700;text-decoration:none;transition:border-color .2s,background .2s}
+.button-ghost:hover{border-color:var(--red);background:rgba(229,55,46,.08)}
+.section{position:relative}
+.giant-en{position:absolute;top:8px;right:-10px;font-family:var(--font-display);font-weight:700;font-size:clamp(4rem,13vw,11rem);letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1px rgba(143,164,255,.14);pointer-events:none;user-select:none;line-height:1;z-index:0}
