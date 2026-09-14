@@ -122,3 +122,22 @@
 .button-ghost:hover{border-color:var(--red);background:rgba(229,55,46,.08)}
 .section{position:relative}
 .giant-en{position:absolute;top:8px;right:-10px;font-family:var(--font-display);font-weight:700;font-size:clamp(4rem,13vw,11rem);letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1px rgba(143,164,255,.14);pointer-events:none;user-select:none;line-height:1;z-index:0}
+
+/* デザイン改修ラウンド2（2026-09-15・Codex提案反映） */
+.hero-art{display:none}
+.hero h1{letter-spacing:-.025em}
+h2{letter-spacing:-.02em}
+.story-role{font-size:.875rem}
+.story-stats{font-size:.8125rem;line-height:1.8}
+/* 工程チップ→プレーンな流れ表記（枠を外して文章化） */
+.story-flow li{border:0;padding:2px 0;border-radius:0;color:#aab3d8;font-size:.8125rem}
+.story-flow li:not(:last-child)::after{content:"→";margin:0 10px;color:var(--red)}
+/* FOUNDERの赤は下線1箇所に絞る */
+.founder-photo-wrap::before{border-color:rgba(143,164,255,.25)}
+.founder-avatar,.founder-photo{border-color:var(--line)}
+/* 実績直後CTA */
+.works-cta{margin-top:45px;display:flex;flex-direction:column;gap:18px;align-items:flex-start;border:1px solid var(--line);padding:30px 26px}
+.works-cta p{font-size:1.0625rem;font-weight:700}
+@media(min-width:768px){.works-cta{flex-direction:row;justify-content:space-between;align-items:center;padding:34px 40px}}
+/* モバイル固定CTA */
+.sticky-cta{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:90;display:flex;justify-content:center;align-items:center;gap:8px;background:#cf2b23;color:#fff;font-weight:700;font-size:.9375rem;padding:15px;text-decoration:none;box-shadow:0 6px 24px rgba(0,0,0,.45)}

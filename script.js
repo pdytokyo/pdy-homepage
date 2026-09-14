@@ -113,6 +113,22 @@
       }
     });
   }
+  // モバイル: ヒーロー通過後に画面下へ診断CTAを固定表示
+  const stickyTarget = document.querySelector('#contact');
+  if (stickyTarget && mobile.matches) {
+    const bar = document.createElement('a');
+    bar.href = '#contact';
+    bar.className = 'sticky-cta';
+    bar.innerHTML = 'チャンネル無料診断 <span aria-hidden="true">↗</span>';
+    bar.hidden = true;
+    document.body.appendChild(bar);
+    const hero = document.querySelector('.hero');
+    addEventListener('scroll', () => {
+      const past = hero ? hero.getBoundingClientRect().bottom < 0 : scrollY > 500;
+      const nearForm = stickyTarget.getBoundingClientRect().top < innerHeight;
+      bar.hidden = !(past && !nearForm);
+    }, { passive: true });
+  }
 })();
 
 // ── 粒子オープニング: 粒子が集まって再生ボタン▶を描き、押されてヒーローPVへ ──
@@ -120,6 +136,7 @@
   try {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (location.pathname !== '/' && !location.pathname.endsWith('index.html')) return;
+    if (location.hash && location.hash !== '#top') return; // セクション直行時は演出を挟まない
     let seen = null;
     try { seen = sessionStorage.getItem('pdyIntroSeen'); } catch { /* 記憶不可でも1回は再生 */ }
     if (seen) return;
@@ -190,7 +207,7 @@
     overlay.addEventListener('pointerdown', finish);
     addEventListener('keydown', function onKey() { removeEventListener('keydown', onKey); finish(); }, { once: true });
 
-    const T_HOLD = 2000, T_OUT = 650; // 集合完了後の静止時間 / 退場時間
+    const T_HOLD = 450, T_OUT = 550; // 集合完了後の静止時間 / 退場時間（短縮版）
     let phase = 'in', phaseStart = performance.now(), prev = performance.now();
     function tick(now) {
       if (finished) return;
@@ -200,7 +217,7 @@
         ctx.fillStyle = '#04040a'; ctx.fillRect(0, 0, W, H);
         const el = now - phaseStart;
         let alpha = 1;
-        if (phase === 'in' && el > 1400) { phase = 'hold'; phaseStart = now; }
+        if (phase === 'in' && el > 850) { phase = 'hold'; phaseStart = now; }
         else if (phase === 'hold' && el > T_HOLD) { phase = 'out'; phaseStart = now; }
         else if (phase === 'out') {
           alpha = Math.max(0, 1 - el / T_OUT);
