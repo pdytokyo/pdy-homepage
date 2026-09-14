@@ -6,6 +6,48 @@
   const mobile = window.matchMedia('(max-width: 767px)');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  // URLは動きを許可する場合のみ設定。reduce時は動画を取得しない。
+  const heroVideo = document.querySelector('#hero-pv');
+  const videoToggle = document.querySelector('.hero-video-toggle');
+  if (heroVideo && videoToggle) {
+    const updateVideoButton = () => {
+      const paused = heroVideo.paused;
+      videoToggle.setAttribute('aria-label', paused ? '背景動画を再生' : '背景動画を一時停止');
+      videoToggle.querySelector('span').textContent = paused ? '▶' : '⏸';
+    };
+    const playVideo = () => {
+      heroVideo.play().catch(updateVideoButton);
+    };
+    const applyMotionPreference = () => {
+      if (reducedMotion.matches) {
+        heroVideo.pause();
+        if (heroVideo.hasAttribute('src')) {
+          heroVideo.removeAttribute('src');
+          heroVideo.load();
+        }
+        if (document.activeElement === videoToggle) {
+          const heroLink = document.querySelector('.hero-content a');
+          if (heroLink) heroLink.focus({ preventScroll: true });
+        }
+        videoToggle.hidden = true;
+      } else {
+        heroVideo.src = heroVideo.dataset.src;
+        videoToggle.hidden = false;
+        playVideo();
+      }
+      updateVideoButton();
+    };
+    heroVideo.addEventListener('play', updateVideoButton);
+    heroVideo.addEventListener('pause', updateVideoButton);
+    videoToggle.addEventListener('click', () => {
+      if (reducedMotion.matches) return;
+      if (heroVideo.paused) playVideo();
+      else heroVideo.pause();
+    });
+    reducedMotion.addEventListener('change', applyMotionPreference);
+    applyMotionPreference();
+  }
+
   // メニュー（採用ページ等、要素が無いページでは何もしない）
   if (menuButton && navigation) {
     function closeMenu(returnFocus = false) {
@@ -71,7 +113,7 @@
     });
   }
 
-  // UIプレビュー。通信・保存は行わない。送信先接続時に差し替える。
+  // 無料診断フォーム: 成功時のみ受付完了へ切り替える。
   const form = document.querySelector('#diagnosis-form');
   if (form) {
     const API = 'https://pdy-script-generator.pdytokyo.workers.dev/api/homepage/diagnosis';
@@ -102,6 +144,7 @@
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.ok) {
           form.reset();
+          button.textContent = '受付完了';
           show('受け付けました。診断レポートづくりに取りかかります。2営業日以内にメールでご連絡します。');
         } else {
           show(data.error || '送信に失敗しました。時間を置いてお試しいただくか、pdytokyo@gmail.com へ直接ご連絡ください。');
