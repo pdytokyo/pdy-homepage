@@ -74,12 +74,43 @@
   // UIプレビュー。通信・保存は行わない。送信先接続時に差し替える。
   const form = document.querySelector('#diagnosis-form');
   if (form) {
-    form.addEventListener('submit', event => {
+    const API = 'https://pdy-script-generator.pdytokyo.workers.dev/api/homepage/diagnosis';
+    form.addEventListener('submit', async event => {
       event.preventDefault();
       const status = document.querySelector('#form-status');
-      status.textContent = '現在準備中です。無料診断の受付開始まで、今しばらくお待ちください。入力内容は送信されていません。';
-      status.focus({ preventScroll: true });
-      status.scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'nearest' });
+      const button = form.querySelector('.button-submit');
+      const show = text => {
+        status.textContent = text;
+        status.focus({ preventScroll: true });
+        status.scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'nearest' });
+      };
+      button.disabled = true;
+      show('送信しています…');
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            company: form.querySelector('#company-name').value,
+            name: form.querySelector('#full-name').value,
+            email: form.querySelector('#email').value,
+            channel: form.querySelector('#channel').value,
+            message: form.querySelector('#message').value,
+            website: form.querySelector('input[name="website"]')?.value || '',
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
+          form.reset();
+          show('受け付けました。診断レポートづくりに取りかかります。2営業日以内にメールでご連絡します。');
+        } else {
+          show(data.error || '送信に失敗しました。時間を置いてお試しいただくか、pdytokyo@gmail.com へ直接ご連絡ください。');
+          button.disabled = false;
+        }
+      } catch {
+        show('通信エラーで送信できませんでした。pdytokyo@gmail.com へ直接ご連絡ください。');
+        button.disabled = false;
+      }
     });
   }
 })();
