@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs><linearGradient id="bg"><stop stop-color="#04040a"/><stop offset="1" stop-color="#2436c9"/></linearGradient></defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g fill="none" stroke="#879aff" opacity=".35"><ellipse cx="990" cy="305" rx="190" ry="270" transform="rotate(25 990 305)"/><ellipse cx="990" cy="305" rx="135" ry="210" stroke-width="30" transform="rotate(25 990 305)"/></g>
+  <g fill="#f5f5f7" font-family="sans-serif" font-weight="700"><text x="70" y="95" font-size="42">PDY<tspan fill="#e5372e">.</tspan></text><text x="70" y="263" font-size="66">伸びる動画には、</text><text x="70" y="355" font-size="66">構造がある。</text><text x="70" y="445" font-size="29">再現するのが、私たちの仕事。</text></g>
+  <path d="M70 380h400" stroke="#e5372e" stroke-width="6"/>
+  <text x="70" y="565" fill="#c1c4dd" font-family="sans-serif" font-size="21">株式会社PDYエンタテインメント</text>
+</svg>
