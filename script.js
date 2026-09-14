@@ -137,6 +137,7 @@
             name: form.querySelector('#full-name').value,
             email: form.querySelector('#email').value,
             channel: form.querySelector('#channel').value,
+            goal: form.querySelector('#goal')?.value || '',
             message: form.querySelector('#message').value,
             website: form.querySelector('input[name="website"]')?.value || '',
           }),
