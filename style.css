@@ -97,3 +97,22 @@
 
 /* 粒子オープニング（2026-09-15追加・dip参考） */
 #intro-overlay{position:fixed;inset:0;z-index:9999;background:#04040a;transition:opacity .2s}
+
+/* レビュー反映（2026-09-15）: 最小幅あふれ対策・列数調整・CTAコントラスト */
+.story-card,.story-head>div,.company-table,.company-table dd,.founder-copy{min-width:0}
+.story-flow li,.founder-chips li{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.story-flow li:not(:last-child)::after{content:"";margin:0}
+.company-table .text-link{min-width:0;max-width:100%}
+@media(min-width:768px){
+ .story-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .company{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .job-list{grid-template-columns:repeat(1,minmax(0,1fr))}
+}
+@media(min-width:1100px){
+ .story-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .service-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .job-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+.button,.button-submit{background:#cf2b23;font-weight:700}
+.button:hover{background:#e5372e}
