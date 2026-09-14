@@ -100,12 +100,18 @@
   const off = document.createElement('canvas');
   off.width = W; off.height = H;
   const octx = off.getContext('2d');
-  const fontSize = Math.min(W * 0.28, 260);
-  octx.font = '700 ' + fontSize + 'px Oswald, sans-serif';
-  octx.textAlign = 'center'; octx.textBaseline = 'middle';
+  // 再生ボタン（円リング + 三角）: 「再生回数」の会社の開幕は再生ボタンから
+  const R = Math.min(W, H) * 0.22;
+  octx.strokeStyle = '#fff'; octx.lineWidth = Math.max(6, R * 0.07);
+  octx.beginPath(); octx.arc(W / 2, H / 2, R, 0, Math.PI * 2); octx.stroke();
   octx.fillStyle = '#fff';
-  octx.fillText('PDY.', W / 2, H / 2);
-  const gap = Math.max(4, Math.floor(fontSize / 42));
+  const t = R * 0.52, cx = W / 2 + R * 0.06, cy = H / 2;
+  octx.beginPath();
+  octx.moveTo(cx - t * 0.55, cy - t);
+  octx.lineTo(cx - t * 0.55, cy + t);
+  octx.lineTo(cx + t * 0.95, cy);
+  octx.closePath(); octx.fill();
+  const gap = Math.max(4, Math.floor(R / 34));
   const img = octx.getImageData(0, 0, W, H).data;
   const targets = [];
   for (let y = 0; y < H; y += gap) for (let x = 0; x < W; x += gap)
@@ -132,7 +138,10 @@
       if (alpha <= 0) { overlay.remove(); document.body.style.overflow = ''; return; }
     }
     for (const p of parts) {
-      if (phase === 'out') { p.x += (p.x - W / 2) * 0.03; p.y += (p.y - H / 2) * 0.03; }
+      if (phase === 'out') {
+        const k = el < 130 ? -0.06 : 0.085; // 一瞬沈み込んでから弾ける
+        p.x += (p.x - W / 2) * k; p.y += (p.y - H / 2) * k;
+      }
       else { p.x += (p.tx - p.x) * p.d; p.y += (p.ty - p.y) * p.d; }
       ctx.globalAlpha = alpha;
       ctx.fillStyle = p.c;
