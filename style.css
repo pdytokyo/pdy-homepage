@@ -94,3 +94,6 @@
 .job-table dt{color:var(--muted)}.job-table dd{margin:0;line-height:1.9}
 .job-card .button{justify-self:start}
 @media(min-width:768px){.job-list{grid-template-columns:repeat(3,1fr)}.recruit-page{padding-top:60px}}
+
+/* 粒子オープニング（2026-09-15追加・dip参考） */
+#intro-overlay{position:fixed;inset:0;z-index:9999;background:#04040a;transition:opacity .2s}

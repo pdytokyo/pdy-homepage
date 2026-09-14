@@ -74,3 +74,72 @@
     status.scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'nearest' });
   });
 })();
+
+// ── 粒子オープニング: 粒子が集まって「PDY.」を描き、散ってヒーローへ ──
+(function () {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (location.pathname !== '/' && !location.pathname.endsWith('index.html')) return;
+  if (sessionStorage.getItem('pdyIntroSeen')) return;
+  sessionStorage.setItem('pdyIntroSeen', '1');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'intro-overlay';
+  const canvas = document.createElement('canvas');
+  overlay.appendChild(canvas);
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const W = innerWidth, H = innerHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+
+  // 文字のピクセルをサンプリングして目標座標を作る
+  const off = document.createElement('canvas');
+  off.width = W; off.height = H;
+  const octx = off.getContext('2d');
+  const fontSize = Math.min(W * 0.28, 260);
+  octx.font = '700 ' + fontSize + 'px Oswald, sans-serif';
+  octx.textAlign = 'center'; octx.textBaseline = 'middle';
+  octx.fillStyle = '#fff';
+  octx.fillText('PDY.', W / 2, H / 2);
+  const gap = Math.max(4, Math.floor(fontSize / 42));
+  const img = octx.getImageData(0, 0, W, H).data;
+  const targets = [];
+  for (let y = 0; y < H; y += gap) for (let x = 0; x < W; x += gap)
+    if (img[(y * W + x) * 4 + 3] > 128) targets.push([x, y]);
+
+  const parts = targets.map(([tx, ty]) => ({
+    x: Math.random() * W, y: Math.random() * H, tx, ty,
+    c: Math.random() < 0.08 ? '#e5372e' : (Math.random() < 0.12 ? '#6c86ff' : '#ffffff'),
+    s: 1 + Math.random() * 1.6, d: 0.05 + Math.random() * 0.055,
+  }));
+
+  const T_HOLD = 2000, T_OUT = 650; // 集合完了後の静止時間 / 退場時間
+  let phase = 'in', phaseStart = performance.now();
+  function tick(now) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#04040a'; ctx.fillRect(0, 0, W, H);
+    const el = now - phaseStart;
+    let alpha = 1;
+    if (phase === 'in' && el > 1400) { phase = 'hold'; phaseStart = now; }
+    else if (phase === 'hold' && el > T_HOLD) { phase = 'out'; phaseStart = now; }
+    else if (phase === 'out') {
+      alpha = Math.max(0, 1 - el / T_OUT);
+      overlay.style.opacity = alpha;
+      if (alpha <= 0) { overlay.remove(); document.body.style.overflow = ''; return; }
+    }
+    for (const p of parts) {
+      if (phase === 'out') { p.x += (p.x - W / 2) * 0.03; p.y += (p.y - H / 2) * 0.03; }
+      else { p.x += (p.tx - p.x) * p.d; p.y += (p.ty - p.y) * p.d; }
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.c;
+      ctx.fillRect(p.x, p.y, p.s, p.s);
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
