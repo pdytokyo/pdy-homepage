@@ -60,16 +60,16 @@
           const stage = res.headers.get('X-Diag-Stage') || (res.ok ? 'done' : '');
           if (res.status === 404 || res.status === 410) {
             // 送信直後は数秒だけ保存待ちがある
-            if (isNew && notFoundCount++ < 12) { setProgress('queued'); timer = setTimeout(load, 5000); return; }
+            if (isNew && notFoundCount++ < 100) { setProgress('queued'); timer = setTimeout(load, 5000); return; }
             return fail('このレポートは見つからないか、公開期限（60日）を過ぎています。');
           }
-          if (!res.ok) { if (isNew && notFoundCount++ < 12) { setProgress('queued'); timer = setTimeout(load, 5000); return; } return fail('レポートを読み込めませんでした。時間を置いてもう一度お試しください。'); }
+          if (!res.ok) { if (isNew && notFoundCount++ < 100) { setProgress('queued'); timer = setTimeout(load, 5000); return; } return fail('レポートを読み込めませんでした。時間を置いてもう一度お試しください。'); }
           const html = await res.text();
           if (html.trim()) { box.innerHTML = html; }
           document.title = (box.querySelector('h1')?.textContent || 'チャンネル診断レポート') + '｜PDY ENTERTAINMENT';
           setProgress(stage);
           if (stage !== 'done') timer = setTimeout(load, 6000);
-        } catch { if (isNew && notFoundCount++ < 12) { timer = setTimeout(load, 6000); return; } fail('通信エラーで読み込めませんでした。'); }
+        } catch { if (isNew && notFoundCount++ < 100) { timer = setTimeout(load, 6000); return; } fail('通信エラーで読み込めませんでした。'); }
       };
       if (isNew) setProgress('queued');
       load();
