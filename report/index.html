@@ -17,6 +17,13 @@
     #report-body { min-height: 40vh; }
     .report-progress { margin: 0 16px 12px; padding: 14px 16px; border: 1px solid #e3e7f0; border-left: 4px solid #d63b2f; background: #f7f8fb; color: #1b2140; font-size: 15px; line-height: 1.6; }
     .report-progress small { color: #5a6580; }
+    .report-bar { position: relative; height: 10px; margin: 10px 0 6px; background: #e3e7f0; border-radius: 6px; overflow: hidden; }
+    .report-bar > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #d63b2f, #f0715f); border-radius: 6px; transition: width .8s ease; }
+    .report-eta { display: flex; justify-content: space-between; font-size: 13px; color: #5a6580; }
+    .report-steps { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .report-steps span { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #eef1f7; color: #7a859d; }
+    .report-steps span.on { background: #d63b2f; color: #fff; }
+    .report-steps span.ok { background: #1b2140; color: #fff; }
     .report-progress-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #d63b2f; margin-right: 8px; animation: report-pulse 1.2s ease-in-out infinite; }
     @keyframes report-pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
     @media (prefers-reduced-motion: reduce) { .report-progress-dot { animation: none; } }
@@ -47,11 +54,40 @@
       const STAGE_TEXT = { queued: '順番待ち中…', fetching: 'チャンネルの公開データを取得しています…', metrics: '数字を整理しました。弱点を分析しています…', picks: '弱点を特定しました。企画を作成しています…', plan: '企画ができました。絵コンテを描いています…', images: '仕上げ中…' };
       const fail = (msg) => { box.innerHTML = `<p class="report-error">${msg}<br><a href="../#contact">もう一度診断を依頼する</a>／お急ぎの方は <a href="mailto:pdytokyo@gmail.com">pdytokyo@gmail.com</a> へ。</p>`; };
       if (!/^[A-Za-z0-9_-]{8,128}$/.test(token)) { fail('レポートのアドレスが正しくありません。メールに記載のリンクをそのまま開いてください。'); return; }
-      let bar = null;
+      // 進捗バー: 段階ごとの到達率と、プラットフォーム別の見込み時間から残り秒数を出す
+      const STAGES = ['queued', 'fetching', 'metrics', 'picks', 'plan', 'images', 'done'];
+      const STAGE_PCT = { queued: 4, fetching: 15, metrics: 40, picks: 58, plan: 74, images: 92, done: 100 };
+      const STEP_LABEL = { fetching: 'データ取得', metrics: '数字', picks: '弱点', plan: '企画', images: '絵コンテ' };
+      const startedAt = Date.now();
+      let bar = null, curStage = 'queued', shown = 0, expectedSec = 150, ticker = null;
+      const fmtSec = (n) => n >= 60 ? `約${Math.ceil(n / 60)}分` : `約${Math.max(5, Math.round(n / 5) * 5)}秒`;
+      const draw = () => {
+        if (!bar) return;
+        const idx = STAGES.indexOf(curStage);
+        const target = STAGE_PCT[curStage] ?? 4;
+        const next = STAGE_PCT[STAGES[Math.min(idx + 1, STAGES.length - 1)]] ?? 100;
+        // 次の段階の手前までは時間で少しずつ進める（止まって見えないように）
+        const elapsed = (Date.now() - startedAt) / 1000;
+        const creep = Math.min(next - 3, target + (elapsed / expectedSec) * 100 * 0.6);
+        shown = Math.max(shown, Math.min(curStage === 'done' ? 100 : creep, target < shown ? shown : Math.max(target, creep)));
+        const pct = Math.round(Math.min(100, shown));
+        const remain = Math.max(5, Math.round(expectedSec * (1 - pct / 100)));
+        bar.querySelector('.report-bar > span').style.width = pct + '%';
+        bar.querySelector('.report-eta').innerHTML = `<span>${STAGE_TEXT[curStage] || 'レポートを作成しています…'}</span><span>${pct}%・残り${fmtSec(remain)}</span>`;
+        bar.querySelector('.report-steps').innerHTML = ['fetching', 'metrics', 'picks', 'plan', 'images'].map(k => `<span class="${STAGES.indexOf(k) < idx ? 'ok' : k === curStage ? 'on' : ''}">${STEP_LABEL[k]}</span>`).join('');
+      };
       const setProgress = (stage) => {
-        if (stage === 'done') { if (bar) bar.remove(); bar = null; return; }
-        if (!bar) { bar = document.createElement('div'); bar.className = 'report-progress'; box.parentNode.insertBefore(bar, box); }
-        bar.innerHTML = `<span class="report-progress-dot"></span>${STAGE_TEXT[stage] || 'レポートを作成しています…'}<br><small>この画面のまま少しお待ちください（できた順に表示されます。完成したらメールでも同じリンクが届きます）</small>`;
+        if (stage === 'done') { if (bar) bar.remove(); bar = null; if (ticker) clearInterval(ticker); return; }
+        curStage = stage;
+        const body = box.innerText || '';
+        if (/対象:\s*YouTube/.test(body)) expectedSec = 100; else if (/対象:\s*Instagram/.test(body)) expectedSec = 170;
+        if (!bar) {
+          bar = document.createElement('div'); bar.className = 'report-progress';
+          bar.innerHTML = `<div class="report-bar"><span></span></div><div class="report-eta"></div><div class="report-steps"></div><small>この画面のまま少しお待ちください。できた順に表示され、完成したらメールでも同じリンクが届きます。</small>`;
+          box.parentNode.insertBefore(bar, box);
+          ticker = setInterval(draw, 1000);
+        }
+        draw();
       };
       let notFoundCount = 0, timer = null;
       const load = async () => {
