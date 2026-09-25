@@ -68,7 +68,11 @@
           if (html.trim()) { box.innerHTML = html; }
           document.title = (box.querySelector('h1')?.textContent || 'チャンネル診断レポート') + '｜PDY ENTERTAINMENT';
           setProgress(stage);
-          if (stage !== 'done') timer = setTimeout(load, 6000);
+          if (stage !== 'done') {
+            // 画面を開いている間はブラウザ側から「次の段階へ」を頼み、サーバーの再開待ちを無くす（応答は段階完了まで待つ）
+            try { await fetch(`${WORKER}/api/homepage/diagnosis/continue`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) }); } catch { /* 未対応・混雑時は通常のポーリングに任せる */ }
+            timer = setTimeout(load, 1500);
+          }
         } catch { if (isNew && notFoundCount++ < 100) { timer = setTimeout(load, 6000); return; } fail('通信エラーで読み込めませんでした。'); }
       };
       if (isNew) setProgress('queued');
