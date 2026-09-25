@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>チャンネル診断レポート｜PDY ENTERTAINMENT</title>
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .report-shell { max-width: 760px; margin: 0 auto; padding: 96px 16px 64px; }
+    .report-shell .report-loading, .report-shell .report-error { padding: 32px 0; color: #cfd6e6; line-height: 1.8; }
+    .report-shell .report-error a { color: #ff4d4d; }
+    #report-body { min-height: 40vh; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../" aria-label="PDY ENTERTAINMENT トップ"><span class="brand-mark">PDY<span class="brand-dot">.</span></span><span class="brand-caption">ENTERTAINMENT</span></a>
+    <nav id="navigation" class="navigation" aria-label="メインナビゲーション">
+      <a href="../#about">ABOUT</a><a href="../#services">SERVICES</a><a href="../#works">WORKS</a><a href="../#company">COMPANY</a>
+      <a class="button button-small" href="../#contact">チャンネル無料診断 <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+  <main class="report-shell">
+    <div id="report-body" aria-live="polite">
+      <p class="report-loading">診断レポートを読み込んでいます…</p>
+    </div>
+  </main>
+  <footer class="site-footer wrap"><a class="brand" href="../" aria-label="PDY ENTERTAINMENT トップ"><span class="brand-mark">PDY<span class="brand-dot">.</span></span><span class="brand-caption">ENTERTAINMENT</span></a><p>株式会社PDYエンタテインメント</p><small>© PDY ENTERTAINMENT</small></footer>
+  <script>
+    (() => {
+      const WORKER = 'https://pdy-script-generator.pdytokyo.workers.dev';
+      const box = document.querySelector('#report-body');
+      const params = new URLSearchParams(location.search);
+      const token = (params.get('t') || location.hash.replace(/^#/, '')).trim();
+      const fail = (msg) => { box.innerHTML = `<p class="report-error">${msg}<br><a href="../#contact">もう一度診断を依頼する</a>／お急ぎの方は <a href="mailto:pdytokyo@gmail.com">pdytokyo@gmail.com</a> へ。</p>`; };
+      if (!/^[A-Za-z0-9_-]{8,128}$/.test(token)) { fail('レポートのアドレスが正しくありません。メールに記載のリンクをそのまま開いてください。'); return; }
+      fetch(`${WORKER}/diag/${encodeURIComponent(token)}?format=fragment`, { headers: { Accept: 'text/html' } })
+        .then(async (res) => {
+          if (res.status === 404 || res.status === 410) return fail('このレポートは見つからないか、公開期限（60日）を過ぎています。');
+          if (!res.ok) return fail('レポートを読み込めませんでした。時間を置いてもう一度お試しください。');
+          const html = await res.text();
+          box.innerHTML = html;
+          document.title = (box.querySelector('h1')?.textContent || 'チャンネル診断レポート') + '｜PDY ENTERTAINMENT';
+          window.scrollTo(0, 0);
+        })
+        .catch(() => fail('通信エラーで読み込めませんでした。'));
+    })();
+  </script>
+</body>
+</html>

@@ -138,7 +138,7 @@
             email: form.querySelector('#email').value,
             channel: form.querySelector('#channel').value,
             goal: form.querySelector('#goal')?.value || '',
-            message: form.querySelector('#message').value,
+            message: (new URLSearchParams(location.search).get('ref') ? `[${new URLSearchParams(location.search).get('ref').slice(0, 24)}] ` : '') + form.querySelector('#message').value,
             website: form.querySelector('input[name="website"]')?.value || '',
           }),
         });
@@ -146,7 +146,7 @@
         if (res.ok && data.ok) {
           form.reset();
           button.textContent = '受付完了';
-          show('受け付けました。診断レポートづくりに取りかかります。2営業日以内にメールでご連絡します。');
+          show('受け付けました。約10分でメールに診断レポートのリンクをお送りします（届かない場合は迷惑メールをご確認ください）。');
         } else {
           show(data.error || '送信に失敗しました。時間を置いてお試しいただくか、pdytokyo@gmail.com へ直接ご連絡ください。');
           button.disabled = false;
