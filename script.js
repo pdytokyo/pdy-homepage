@@ -146,6 +146,12 @@
         if (res.ok && data.ok) {
           form.reset();
           button.textContent = '受付完了';
+          if (data.token && /^[A-Za-z0-9_-]{8,128}$/.test(data.token)) {
+            // その場で段階表示のレポートへ（メールでも同じリンクが届く）
+            show('受け付けました。診断レポートの画面に移動します…');
+            location.href = `/report/?t=${encodeURIComponent(data.token)}&new=1`;
+            return;
+          }
           show('受け付けました。約10分でメールに診断レポートのリンクをお送りします（届かない場合は迷惑メールをご確認ください）。');
         } else {
           show(data.error || '送信に失敗しました。時間を置いてお試しいただくか、pdytokyo@gmail.com へ直接ご連絡ください。');
