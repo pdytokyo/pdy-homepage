@@ -95,8 +95,17 @@
           const res = await fetch(`${WORKER}/diag/${encodeURIComponent(token)}?format=fragment`, { headers: { Accept: 'text/html' }, cache: 'no-store' });
           const stage = res.headers.get('X-Diag-Stage') || (res.ok ? 'done' : '');
           if (res.status === 404 || res.status === 410) {
-            // 送信直後は数秒だけ保存待ちがある
-            if (isNew && notFoundCount++ < 100) { setProgress('queued'); timer = setTimeout(load, 5000); return; }
+            // 送信直後（まだ何も保存されていない）: ブラウザから最初の段階（データ取得）を頼む。応答は取得完了まで待つ
+            if (isNew && notFoundCount++ < 100) {
+              setProgress('fetching');
+              try {
+                const c = await fetch(`${WORKER}/api/homepage/diagnosis/continue`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
+                const cj = await c.json().catch(() => null);
+                // 取得できないアカウント（非公開・見つからない・未対応URL）は、その場で理由を出して待たせない
+                if (cj && ['failed', 'unsupported'].includes(cj.state)) { if (bar) { bar.remove(); bar = null; } if (ticker) clearInterval(ticker); return fail(cj.message || '自動診断ができませんでした。代表が直接拝見し、2営業日以内にご連絡します。'); }
+              } catch { /* 混雑時はポーリングに任せる */ }
+              timer = setTimeout(load, 1500); return;
+            }
             return fail('このレポートは見つからないか、公開期限（60日）を過ぎています。');
           }
           if (!res.ok) { if (isNew && notFoundCount++ < 100) { setProgress('queued'); timer = setTimeout(load, 5000); return; } return fail('レポートを読み込めませんでした。時間を置いてもう一度お試しください。'); }
@@ -106,7 +115,11 @@
           setProgress(stage);
           if (stage !== 'done') {
             // 画面を開いている間はブラウザ側から「次の段階へ」を頼み、サーバーの再開待ちを無くす（応答は段階完了まで待つ）
-            try { await fetch(`${WORKER}/api/homepage/diagnosis/continue`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) }); } catch { /* 未対応・混雑時は通常のポーリングに任せる */ }
+            try {
+              const c = await fetch(`${WORKER}/api/homepage/diagnosis/continue`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }) });
+              const cj = await c.json().catch(() => null);
+              if (cj && ['failed', 'unsupported'].includes(cj.state)) { if (bar) { bar.remove(); bar = null; } if (ticker) clearInterval(ticker); return fail(cj.message || '自動診断を続けられませんでした。代表が直接拝見し、2営業日以内にご連絡します。'); }
+            } catch { /* 未対応・混雑時は通常のポーリングに任せる */ }
             timer = setTimeout(load, 1500);
           }
         } catch { if (isNew && notFoundCount++ < 100) { timer = setTimeout(load, 6000); return; } fail('通信エラーで読み込めませんでした。'); }
